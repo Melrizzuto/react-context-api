@@ -16,7 +16,7 @@ function TagProvider({ children }) {
         axios
             .get("http://localhost:3000/tags")
             .then((res) => {
-                setTagList(res.data.data);
+                setTagList(res.data.results);
             })
             .catch((error) => {
                 console.log(error);
