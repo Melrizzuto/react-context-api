@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/Loader";
-import { useTagContext } from "../context/TagContext"; //importo il contesto di tag
 import axios from "axios";
 
 const newPost = {
@@ -16,8 +15,30 @@ const newPost = {
 function MyFormPage() {
     const [formData, setFormData] = useState(newPost);
     const [isLoading, setIsLoading] = useState(false);
-    const { tagList } = useTagContext();
+    const [tagList, setTagList] = useState([]);
+    const [isLoadingTags, setIsLoadingTags] = useState(true);
     const navigate = useNavigate();
+
+
+    useEffect(() => {
+        axios
+            .get("http://localhost:3000/tags")
+            .then((response) => {
+                const data = response.data;
+
+                if (Array.isArray(data.results)) {
+                    setTagList(data.results);
+                } else {
+                    console.error("I dati dei tag non sono un array:", data.results);
+                }
+
+                setIsLoadingTags(false);
+            })
+            .catch((err) => {
+                console.error("Errore durante il caricamento dei tag:", err);
+                setIsLoadingTags(false)
+            });
+    }, []);
 
     function handleChange(e) {
         const value =
@@ -141,22 +162,28 @@ function MyFormPage() {
                         <small>Seleziona i tag</small>
                     </label>
                     <div className="d-flex">
-                        {tagList.map((tag, index) => (
-                            <div key={index} className="form-check mx-1">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input"
-                                    id={`tag-${index}`}
-                                    name="tags"
-                                    value={tag}
-                                    checked={formData.tags.includes(tag)}
-                                    onChange={handleTags}
-                                />
-                                <label className="form-check-label" htmlFor={`tag-${index}`}>
-                                    {tag}
-                                </label>
-                            </div>
-                        ))}
+                        {isLoadingTags ? (
+                            <p className="text-center">Caricamento dei tag...</p>
+                        ) : tagList.length === 0 ? (
+                            <p className="text-center">Nessun tag disponibile.</p>
+                        ) : (
+                            tagList.map((tag, index) => (
+                                <div key={index} className="form-check mx-1">
+                                    <input
+                                        type="checkbox"
+                                        className="form-check-input"
+                                        id={`tag-${index}`}
+                                        name="tags"
+                                        value={tag}
+                                        checked={formData.tags.includes(tag)}
+                                        onChange={handleTags}
+                                    />
+                                    <label className="form-check-label" htmlFor={`tag-${index}`}>
+                                        {tag}
+                                    </label>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
